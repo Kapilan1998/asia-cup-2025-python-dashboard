@@ -27,4 +27,4 @@ pip install -r requirements.txt
 Make sure you are inside the project folder containing `app.py`, then run:
 
 ```bash
-streamlit run app.py
+python -m streamlit run app.py
