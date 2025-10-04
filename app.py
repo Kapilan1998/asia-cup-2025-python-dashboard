@@ -1,11 +1,12 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import os
+import streamlit as st          # building the web dashboard
+import pandas as pd             # data handling and analysis
+import plotly.express as px     # interactive visualizations
+import os                       # file and path operations
 
 # CONFIGURATION
-DATA_DIR = "data"
+DATA_DIR = "data"       # Folder containing all CSV files
 
+# Dictionary mapping each dashboard section to its CSV file path
 CSV_FILES = {
     "Batting Best Averages": os.path.join(DATA_DIR, "batting_best_averages.csv"),
     "Batting Highest Innings": os.path.join(DATA_DIR, "batting_highest_innings.csv"),
@@ -13,12 +14,12 @@ CSV_FILES = {
     "Bowling Top Wicket Takers": os.path.join(DATA_DIR, "bowling_top_wicket_takers.csv"),
 }
 
-# LOADING DATA
+# LOADING DATA ( Load all CSV files and cache the data for faster performance)
 @st.cache_data
 def load_data():
     data = {}
-    for name, path in CSV_FILES.items():
-        data[name] = pd.read_csv(path)
+    for name, path in CSV_FILES.items():    # Loop through each file in the dictionary
+        data[name] = pd.read_csv(path)      # Read CSV and store in dictionary
     return data
 
 data = load_data()
@@ -78,14 +79,16 @@ st.sidebar.title("🏏 Asia Cup 2025 Dashboard")
 # Add "Home" as first option
 page = st.sidebar.radio(
     "Navigate",
-    ["Home"] + list(CSV_FILES.keys())
+    ["Home"] + list(CSV_FILES.keys())   # Combine "Home" with all dashboard sections
 )
 
+# Get all unique team names from batting and bowling data
 teams = sorted(set(data["Batting Top Tournament"]["team"].unique()) |
                set(data["Bowling Top Wicket Takers"]["team"].unique()))
+# Multi-select widget in sidebar to filter data by selected teams
 team_filter = st.sidebar.multiselect("Filter by team", teams, default=teams)
 
-# Home Page (Welcome)
+# Home Page (display welcome message by default when we visit this application)
 if page == "Home":
     st.markdown(
         """
@@ -95,28 +98,28 @@ if page == "Home":
             <p style="color: orange; font-size: 20px;">Explore batting and bowling performances, top scorers, wicket takers, and more!</p>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True      # allowing custom HTML for styling
     )
 
 # Dashboard Pages
 elif page == "Batting Best Averages":
-    df = data[page].copy()
-    df = df[df["team"].isin(team_filter)]
-    with st.container():
+    df = data[page].copy()  # copy relevant dataset
+    df = df[df["team"].isin(team_filter)] # filter data by selected teams
+    with st.container():        #create container for layout
 
         st.markdown("<h1 style='color: red;'>Batting Best Averages</h1>", unsafe_allow_html=True)
 
-        col1, col2 = st.columns([2,1])
-        with col1:
+        col1, col2 = st.columns([2,1]) # split layout into two columns in the ratio of 2:1 (bar chart larger, pie chart smaller)
+        with col1:   # col1 = bar chart data
             fig = px.bar(df, x="player", y="average", color="team",
                          title="Best Batting Averages", text="average")
             st.plotly_chart(fig, use_container_width=True)
-        with col2:
+        with col2:   # col2 = pie chart
             pie = px.pie(df, names="player", values="average", color="team",
                          title="Share of Averages")
             st.plotly_chart(pie, use_container_width=True)
 
-        st.dataframe(df)
+        st.dataframe(df)    #display raw data table
         st.markdown('</div>', unsafe_allow_html=True)
 
 elif page == "Batting Highest Innings":
